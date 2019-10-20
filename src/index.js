@@ -12,38 +12,27 @@ export default function App() {
   const [ballX] = useState(new Animated.Value(0));
 
   useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(ballY, {
-          toValue: 200,
-          duration: 500,
-        }),
-        Animated.delay(150),
-        Animated.timing(ballX, {
-          toValue: 250,
-          duration: 500,
-        }),
-        Animated.delay(150),
-        Animated.timing(ballY, {
-          toValue: 0,
-          duration: 500,
-        }),
-        Animated.delay(150),
-        Animated.timing(ballX, {
-          toValue: 0,
-          duration: 500,
-        }),
-        Animated.delay(150),
-      ]),
-      {
-        iterations: 2,
-      },
-    ).start();
+    Animated.timing(ballY, {
+      toValue: 400,
+      duration: 1000,
+    }).start();
   }, [ballX, ballY]);
 
   return (
     <View style={styles.container}>
-      <Animated.View style={[styles.ball, {top: ballY, left: ballX}]} />
+      <Animated.View
+        style={[
+          styles.ball,
+          {
+            top: ballY,
+            opacity: ballY.interpolate({
+              inputRange: [0, 200],
+              outputRange: [1, 0.2],
+              extrapolate: 'clamp',
+            }),
+          },
+        ]}
+      />
     </View>
   );
 }
