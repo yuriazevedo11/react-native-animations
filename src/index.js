@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react';
-import {View, StyleSheet, Animated} from 'react-native';
+import {View, StyleSheet, Animated, PanResponder} from 'react-native';
 
 /**
  * Animation types: timing, spring (bounce), decay (acceleration)
@@ -8,28 +8,43 @@ import {View, StyleSheet, Animated} from 'react-native';
  */
 
 export default function App() {
-  const [ballY] = useState(new Animated.Value(0));
-  const [ballX] = useState(new Animated.Value(0));
+  const [ball] = useState(new Animated.ValueXY({x: 0, y: 0}));
+  const [panResponder, setPanResponder] = useState({});
 
   useEffect(() => {
-    Animated.timing(ballY, {
-      toValue: 400,
-      duration: 1000,
-    }).start();
-  }, [ballX, ballY]);
+    setPanResponder(
+      PanResponder.create({
+        onMoveShouldSetPanResponder: () => true,
+        onPanResponderGrant: () => {
+          ball.setOffset({
+            x: ball.x._value,
+            y: ball.y._value,
+          });
+
+          ball.setValue({x: 0, y: 0});
+        },
+        onPanResponderMove: Animated.event([
+          null,
+          {
+            dx: ball.x,
+            dy: ball.y,
+          },
+        ]),
+        onPanResponderRelease: () => {
+          ball.flattenOffset();
+        },
+      }),
+    );
+  }, [ball, ball.x, ball.y]);
 
   return (
     <View style={styles.container}>
       <Animated.View
+        {...panResponder.panHandlers}
         style={[
           styles.ball,
           {
-            top: ballY,
-            opacity: ballY.interpolate({
-              inputRange: [0, 200],
-              outputRange: [1, 0.2],
-              extrapolate: 'clamp',
-            }),
+            transform: [{translateX: ball.x}, {translateY: ball.y}],
           },
         ]}
       />
