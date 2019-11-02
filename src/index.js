@@ -4,8 +4,6 @@ import User from './components/User';
 import USERS_ARRAY from './constants/users';
 import {
   View,
-  Image,
-  Text,
   Platform,
   StatusBar,
   StyleSheet,
@@ -19,13 +17,24 @@ const {width} = Dimensions.get('window');
 
 export default function App() {
   const [scrollOffset] = useState(new Animated.Value(0));
+  const [listProgress] = useState(new Animated.Value(0));
+  const [userInfoProgress] = useState(new Animated.Value(0));
   const [userSelected, setUserSelected] = useState(null);
   const [userInfoVisible, setUserInfoVisible] = useState(false);
   const [users] = useState(USERS_ARRAY);
 
   function handleUserSelection(user) {
     setUserSelected(user);
-    setUserInfoVisible(true);
+    Animated.sequence([
+      Animated.timing(listProgress, {
+        toValue: 100,
+        duration: 300,
+      }),
+      Animated.timing(userInfoProgress, {
+        toValue: 100,
+        duration: 500,
+      }),
+    ]).start(() => setUserInfoVisible(true));
   }
 
   function renderDetail() {
@@ -38,7 +47,20 @@ export default function App() {
 
   function renderList() {
     return (
-      <View style={styles.container}>
+      <Animated.View
+        style={[
+          styles.container,
+          {
+            transform: [
+              {
+                translateX: listProgress.interpolate({
+                  inputRange: [0, 100],
+                  outputRange: [0, width],
+                }),
+              },
+            ],
+          },
+        ]}>
         <ScrollView
           scrollEventThrottle={16}
           onScroll={Animated.event([
@@ -53,7 +75,7 @@ export default function App() {
             />
           ))}
         </ScrollView>
-      </View>
+      </Animated.View>
     );
   }
 
@@ -72,11 +94,18 @@ export default function App() {
             }),
           },
         ]}>
-        <Image
-          style={styles.headerImage}
+        <Animated.Image
+          style={[
+            styles.headerImage,
+            {
+              opacity: userInfoProgress.interpolate({
+                inputRange: [0, 100],
+                outputRange: [0, 1],
+              }),
+            },
+          ]}
           source={userSelected ? {uri: userSelected.thumbnail} : null}
         />
-
         <Animated.Text
           style={[
             styles.headerText,
@@ -86,9 +115,34 @@ export default function App() {
                 outputRange: [24, 18],
                 extrapolate: 'clamp',
               }),
+              transform: [
+                {
+                  translateX: userInfoProgress.interpolate({
+                    inputRange: [0, 100],
+                    outputRange: [0, width],
+                  }),
+                },
+              ],
             },
           ]}>
-          {userSelected ? userSelected.name : 'GoNative'}
+          GoNative
+        </Animated.Text>
+
+        <Animated.Text
+          style={[
+            styles.headerText,
+            {
+              transform: [
+                {
+                  translateX: userInfoProgress.interpolate({
+                    inputRange: [0, 100],
+                    outputRange: [width * -1, 0],
+                  }),
+                },
+              ],
+            },
+          ]}>
+          {userSelected ? userSelected.name : null}
         </Animated.Text>
       </Animated.View>
 
@@ -113,6 +167,7 @@ const styles = StyleSheet.create({
   },
 
   headerText: {
+    fontSize: 24,
     fontWeight: '700',
     textShadowColor: 'rgba(0, 0, 0, 0.75)',
     textShadowOffset: {width: 2, height: 1},
