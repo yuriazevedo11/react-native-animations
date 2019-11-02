@@ -9,7 +9,6 @@ import {
   StyleSheet,
   Dimensions,
   ScrollView,
-  TouchableOpacity,
   Animated,
 } from 'react-native';
 
@@ -26,10 +25,16 @@ export default function App() {
   function handleUserSelection(user) {
     setUserSelected(user);
     Animated.sequence([
-      Animated.timing(listProgress, {
-        toValue: 100,
-        duration: 300,
-      }),
+      Animated.parallel([
+        Animated.timing(scrollOffset, {
+          toValue: 0,
+          duration: 500,
+        }),
+        Animated.timing(listProgress, {
+          toValue: 100,
+          duration: 300,
+        }),
+      ]),
       Animated.timing(userInfoProgress, {
         toValue: 100,
         duration: 500,
