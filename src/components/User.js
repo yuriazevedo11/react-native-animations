@@ -10,9 +10,13 @@ import {
   Dimensions,
   TouchableWithoutFeedback,
   Animated,
+  PanResponder,
 } from 'react-native';
 
+const {width} = Dimensions.get('window');
+
 export default function User({data, onPress}) {
+  const [panResponder, setPanResponder] = useState({});
   const [opacity] = useState(new Animated.Value(0));
   const [offset] = useState(
     new Animated.ValueXY({
@@ -20,6 +24,30 @@ export default function User({data, onPress}) {
       y: 50,
     }),
   );
+
+  useEffect(() => {
+    setPanResponder(
+      PanResponder.create({
+        onMoveShouldSetPanResponder: () => true,
+        onPanResponderMove: Animated.event([
+          null,
+          {
+            dx: offset.x,
+          },
+        ]),
+        onPanResponderRelease: () => {
+          if (offset.x._value < -200) {
+            Alert.alert('Deleted!');
+          }
+
+          Animated.spring(offset.x, {
+            toValue: 0,
+            bounciness: 10,
+          }).start();
+        },
+      }),
+    );
+  }, [offset.x]);
 
   useEffect(() => {
     Animated.parallel([
@@ -37,7 +65,21 @@ export default function User({data, onPress}) {
 
   return (
     <Animated.View
-      style={[{transform: [...offset.getTranslateTransform()]}, {opacity}]}>
+      {...panResponder.panHandlers}
+      style={[
+        {
+          transform: [
+            ...offset.getTranslateTransform(),
+            {
+              rotateZ: offset.x.interpolate({
+                inputRange: [width * -1, width],
+                outputRange: ['-50deg', '50deg'],
+              }),
+            },
+          ],
+        },
+        {opacity},
+      ]}>
       <TouchableWithoutFeedback onPress={onPress}>
         <View style={styles.userContainer}>
           <Image style={styles.thumbnail} source={{uri: data.thumbnail}} />
